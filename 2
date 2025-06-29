@@ -1,0 +1,138 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ShoppingCart, Search, User } from "lucide-react";
+import { motion } from "framer-motion";
+import StripeCheckout from "react-stripe-checkout";
+
+export default function SingularityStore() {
+  const [cart, setCart] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    // Fetch products from admin panel mock (local JSON or CMS later)
+    setProducts([
+      { id: 1, title: "Худи SINGULARITY", price: 129, image: "https://source.unsplash.com/400x400/?fashion,tech,1" },
+      { id: 2, title: "Cargo Pants 2.0", price: 139, image: "https://source.unsplash.com/400x400/?fashion,tech,2" },
+      { id: 3, title: "Футболка Future", price: 89, image: "https://source.unsplash.com/400x400/?fashion,tech,3" },
+    ]);
+  }, []);
+
+  const addToCart = (product) => {
+    setCart([...cart, product]);
+  };
+
+  const removeFromCart = (id) => {
+    setCart(cart.filter((item, index) => index !== id));
+  };
+
+  const handleToken = (token) => {
+    console.log("Stripe token:", token);
+    alert("Платеж успешно принят. Спасибо за заказ!");
+    setCart([]);
+  };
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="text-xl font-bold">SINGULARITY</div>
+        <div className="flex items-center gap-4">
+          <Input placeholder="Поиск..." className="bg-zinc-900 text-white" />
+          <Search className="text-white" />
+          <ShoppingCart className="text-white" />
+          {isAuthenticated ? (
+            <span>👤</span>
+          ) : (
+            <Button onClick={handleLogin} className="text-white border border-white rounded-xl px-3 py-1 text-sm">
+              Войти
+            </Button>
+          )}
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="text-center py-20 bg-gradient-to-b from-black to-zinc-900">
+        <motion.h1 
+          className="text-5xl font-extrabold mb-4"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          Одежда Будущего
+        </motion.h1>
+        <motion.p 
+          className="text-lg text-zinc-400"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          Drop 01 — доступен сейчас
+        </motion.p>
+        <motion.div className="mt-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+          <Button className="bg-white text-black px-6 py-2 text-lg rounded-2xl shadow-md">
+            Купить сейчас
+          </Button>
+        </motion.div>
+      </section>
+
+      {/* Product Section */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 py-12">
+        {products.map((product) => (
+          <Card key={product.id} className="bg-zinc-900 rounded-2xl overflow-hidden">
+            <CardContent className="p-4">
+              <img
+                src={product.image}
+                alt="product"
+                className="w-full h-64 object-cover mb-4 rounded-xl"
+              />
+              <h3 className="text-xl font-semibold">{product.title}</h3>
+              <p className="text-zinc-400">£{product.price}.00</p>
+              <Button className="mt-4 w-full bg-white text-black" onClick={() => addToCart(product)}>
+                Добавить в корзину
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+
+      {/* Cart and Checkout */}
+      {cart.length > 0 && (
+        <section className="px-6 py-8 bg-zinc-800">
+          <h2 className="text-2xl font-bold mb-4">Корзина</h2>
+          <ul>
+            {cart.map((item, index) => (
+              <li key={index} className="mb-2 flex justify-between">
+                {item.title} - £{item.price}
+                <Button variant="ghost" className="text-red-500" onClick={() => removeFromCart(index)}>
+                  Удалить
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <StripeCheckout
+            stripeKey="pk_test_51RfSU8QZkbWlu9XUO6tjhRLu8byw0F4cJGEiaQLxjsEEZHw1HNItj27hg5bYL8vVKeqVLvqctOm6kg7LcriY6nUN008HLYhEt0"
+            token={handleToken}
+            amount={cart.reduce((sum, i) => sum + i.price, 0) * 100}
+            name="SINGULARITY"
+            billingAddress
+            shippingAddress
+            currency="GBP"
+          >
+            <Button className="mt-4 bg-green-500 text-white">Перейти к оплате</Button>
+          </StripeCheckout>
+        </section>
+      )}
+
+      {/* Footer */}
+      <footer className="text-center text-sm text-zinc-500 py-6 border-t border-white/10">
+        © 2025 SINGULARITY. Все права защищены.
+      </footer>
+    </div>
+  );
+}
